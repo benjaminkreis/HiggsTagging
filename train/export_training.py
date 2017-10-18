@@ -38,6 +38,7 @@ def print_to_cpp(name, a):
 
 
 h5File = h5py.File('KERAS_check_best_model_weights.h5')
+
 #print h5 contents
 #for item in h5File.attrs.keys():
 #    print(item + ":", h5File.attrs[item])
@@ -48,6 +49,8 @@ b2 = h5File['/fc2_relu/fc2_relu/bias:0'][()]
 w2 = h5File['/fc2_relu/fc2_relu/kernel:0'][()]
 b3 = h5File['/fc3_relu/fc3_relu/bias:0'][()]
 w3 = h5File['/fc3_relu/fc3_relu/kernel:0'][()]
+b4 = h5File['/softmax/softmax/bias:0'][()]
+w4 = h5File['/softmax/softmax/kernel:0'][()]
 
 print_to_cpp("w1",w1)
 print_to_cpp("b1",b1)
@@ -55,6 +58,8 @@ print_to_cpp("w2",w2)
 print_to_cpp("b2",b2)
 print_to_cpp("w3",w3)
 print_to_cpp("b3",b3)
+print_to_cpp("w4",w4)
+print_to_cpp("b4",b4)
 
 #tarball output
 with tarfile.open('keras_training' + '.tar.gz', mode='w:gz') as archive:
