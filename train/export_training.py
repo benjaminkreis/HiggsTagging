@@ -1,8 +1,13 @@
 import numpy as np
 import h5py
+import os
+import tarfile
 
 def print_to_cpp(name, a):
-    f=open("{}.dat".format(name),"w")
+    if not os.path.isdir('keras_training'):
+        os.mkdir('keras_training')
+
+    f=open("keras_training/{}.dat".format(name),"w")
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))
@@ -26,8 +31,9 @@ def print_to_cpp(name, a):
     f.close()
 
 
-h5File = h5py.File('KERAS_check_best_model_weights.h5')
 
+
+h5File = h5py.File('KERAS_check_best_model_weights.h5')
 #print h5 contents
 #for item in h5File.attrs.keys():
 #    print(item + ":", h5File.attrs[item])
@@ -46,3 +52,5 @@ print_to_cpp("b2",b2)
 print_to_cpp("w3",w3)
 print_to_cpp("b3",b3)
 
+with tarfile.open('keras_training' + '.tar.gz', mode='w:gz') as archive:
+    archive.add('keras_training', recursive=True)
