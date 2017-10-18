@@ -26,8 +26,12 @@ def print_to_cpp(name, a):
     f.close()
 
 
-
 h5File = h5py.File('KERAS_check_best_model_weights.h5')
+
+#print h5 contents
+#for item in h5File.attrs.keys():
+#    print(item + ":", h5File.attrs[item])
+
 b1 = h5File['/fc1_relu/fc1_relu/bias:0'][()]
 w1 = h5File['/fc1_relu/fc1_relu/kernel:0'][()]
 b2 = h5File['/fc2_relu/fc2_relu/bias:0'][()]
