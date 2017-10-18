@@ -7,7 +7,7 @@ def print_to_cpp(name, a):
     if not os.path.isdir('keras_training'):
         os.mkdir('keras_training')
 
-    f=open("keras_training/{}.dat".format(name),"w")
+    f=open("keras_training/{}.h".format(name),"w")
 
     #meta data
     f.write("//Numpy array shape {}\n".format(a.shape))
