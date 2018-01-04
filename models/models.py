@@ -26,8 +26,7 @@ def two_layer_model(Inputs):
     """
     #  Here add e.g. the normal dense stuff from DeepCSV
     x = Dense(32, activation='relu',kernel_initializer='lecun_uniform')(Inputs)
-    #x = Dense(32, activation='linear',kernel_initializer='lecun_uniform')(Inputs)
-    predictions = Dense(1, activation='linear',kernel_initializer='lecun_uniform')(x)
+    predictions = Dense(1, activation='sigmoid',kernel_initializer='lecun_uniform')(x)
     model = Model(inputs=Inputs, outputs=predictions)
     return model
 

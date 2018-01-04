@@ -20,7 +20,7 @@ def makeRoc(testd, model, outputDir):
     print 'in makeRoc()'
     
     # let's use only first 1000 entries
-    NENT = 1000
+    NENT = 10000
     features_val = [fval[:NENT] for fval in testd.getAllFeatures()]
     labels_val=testd.getAllLabels()[0][:NENT,:]
     weights_val=testd.getAllWeights()[0][:NENT]
@@ -42,14 +42,30 @@ def makeRoc(testd, model, outputDir):
     print(df.iloc[:10])
 
         
-    predict_test = model.predict(features_val)
+    predict_test = model.predict(features_val[0][:,0,:])
     df['fj_isH'] = labels_val[:,1]
-    df['fj_deepdoubleb'] = predict_test[:,1]
+    df['fj_deepdoubleb'] = predict_test
 
     print(df.iloc[:10])
 
+    #df['fj_doubleb'] is BDT.  replace this with text file
+    #res_32_12_data = pd.read_csv("res_32-12.dat", header=None)
+    res_32_12_data = pd.read_csv("res_16-10.dat", header=None)
+    res_16_8_data = pd.read_csv("res_16-8.dat", header=None)
+    res_16_3_data = pd.read_csv("res_16-3.dat", header=None)
+    res_8_4_data = pd.read_csv("res_8-4.dat", header=None)
+    res_6_4_data = pd.read_csv("res_6-4.dat", header=None)
+    #print df['fj_deepdoubleb']
+    #print df['fj_doubleb']
+
+
     fpr, tpr, threshold = roc_curve(df['fj_isH'],df['fj_deepdoubleb'])
-    dfpr, dtpr, threshold1 = roc_curve(df['fj_isH'],df['fj_doubleb'])
+    #dfpr, dtpr, threshold1 = roc_curve(df['fj_isH'],df['fj_doubleb'])
+    dfpr_32_12, dtpr_32_12, threshold1_32_12 = roc_curve(df['fj_isH'],res_32_12_data)
+    dfpr_16_8, dtpr_16_8, threshold1_16_8 = roc_curve(df['fj_isH'],res_16_8_data)
+    dfpr_16_3, dtpr_16_3, threshold1_16_3 = roc_curve(df['fj_isH'],res_16_3_data)
+    dfpr_8_4, dtpr_8_4, threshold1_8_4 = roc_curve(df['fj_isH'],res_8_4_data)
+    dfpr_6_4, dtpr_6_4, threshold1_6_4 = roc_curve(df['fj_isH'],res_6_4_data)
 
     def find_nearest(array,value):
         idx = (np.abs(array-value)).argmin()
@@ -61,11 +77,20 @@ def makeRoc(testd, model, outputDir):
     print('deep double-b > %f coresponds to %f%% QCD mistag rate'%(deepdoublebcut,100*val))
 
     auc1 = auc(fpr, tpr)
-    auc2 = auc(dfpr, dtpr)
+    #auc2 = auc(dfpr, dtpr)
+    auc_32_12 = auc(dfpr_32_12, dtpr_32_12)
+    auc_16_8 = auc(dfpr_16_8, dtpr_16_8)
+    auc_16_3 = auc(dfpr_16_3, dtpr_16_3)
+    auc_8_4 = auc(dfpr_8_4, dtpr_8_4)
+    auc_6_4 = auc(dfpr_6_4, dtpr_6_4)
 
     plt.figure()       
-    plt.plot(tpr,fpr,label='deep double-b, auc = %.1f%%'%(auc1*100))
-    plt.plot(dtpr,dfpr,label='BDT double-b, auc = %.1f%%'%(auc2*100))
+    plt.plot(tpr,fpr,label='CPU floating point, auc = %.1f%%'%(auc1*100))
+    plt.plot(dtpr_32_12,dfpr_32_12,label='FPGA fixed<32,12>, auc = %.1f%%'%(auc_32_12*100))
+    plt.plot(dtpr_16_8,dfpr_16_8,label='FPGA fixed<16,8>, auc = %.1f%%'%(auc_16_8*100))
+    #plt.plot(dtpr_16_3,dfpr_16_3,label='FPGA fixed<16,3>, auc = %.1f%%'%(auc_16_3*100))
+    #plt.plot(dtpr_8_4,dfpr_8_4,label='FPGA fixed<8,4>, auc = %.1f%%'%(auc_8_4*100))
+    #plt.plot(dtpr_6_4,dfpr_6_4,label='FPGA fixed<6,4>, auc = %.1f%%'%(auc_6_4*100))
     plt.semilogy()
     plt.xlabel("H(bb) efficiency")
     plt.ylabel("QCD mistag rate")
@@ -130,10 +155,11 @@ def makeRoc(testd, model, outputDir):
 
 #os.environ['CUDA_VISIBLE_DEVICES'] = '7'
 
-inputModel = 'train_deep_simple/KERAS_check_best_model.h5'
-outputDir = 'out_deep_simple/'
+inputModel = 'train_deep_simple_all/KERAS_check_model_last.h5'
+outputDir = 'out_deep_simple_all/'
 # test data:
-inputDataCollection = '/cms-sc17/convert_deepDoubleB_simple_test/dataCollection.dc'
+#inputDataCollection = 'data/convert_20170717_ak8_deepDoubleB_simple10_test/dataCollection.dc'
+inputDataCollection = 'data/convert_20170717_ak8_deepDoubleB_simple10_train_val/dataCollection.dc'
 # training data:
 #inputDataCollection = '/cms-sc17/convert_deepDoubleB_simple_train_val/dataCollection.dc'
 
@@ -176,7 +202,7 @@ def _byteify(data, ignore_dicts = False):
 
 import json
 
-f = open('train_deep_simple/full_info.log')
+f = open('train_deep_simple_all/full_info.log')
 myListOfDicts = json.load(f, object_hook=_byteify)
 myDictOfLists = {}
 for key, val in myListOfDicts[0].iteritems():

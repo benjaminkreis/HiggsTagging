@@ -1,5 +1,6 @@
 import sys
 import os
+from time import clock
 
 copypath = ['../models',
             '../generator',
@@ -28,7 +29,7 @@ class MyClass:
 
 
 args = MyClass()
-args.inputDataCollection = '/cms-sc17/convert_deepDoubleB_simple_train_val/dataCollection.dc'
+args.inputDataCollection = 'data/convert_20170717_ak8_deepDoubleB_simple10_train_val/dataCollection.dc'
 args.outputDir = 'train_deep_simple_all/'
 
 #also does all the parsing
@@ -58,11 +59,13 @@ print labels_val.shape
 
 from sklearn.model_selection import train_test_split
 
-X_train_val, X_test, y_train_val, y_test = train_test_split(features_val[0][:,0,0:10], labels_val[:,1], test_size=0.2, random_state=42)
+#X_train_val, X_test, y_train_val, y_test = train_test_split(features_val[0][:,0,0:10], labels_val[:,1], test_size=0.2, random_state=42)
+X_train_val = features_val[0][:,0,0:10]
+y_train_val = labels_val[:,1]
 print X_train_val.shape
 print y_train_val.shape
-print X_test.shape
-print y_test.shape
+#print X_test.shape
+#print y_test.shape
 
 
 from models import two_layer_model
@@ -89,6 +92,10 @@ callbacks=DeepJet_callbacks(stop_patience=1000,
 keras_model.fit(X_train_val, y_train_val, batch_size = 1024, epochs = 10,
                 validation_split = 0.25, shuffle = True, callbacks = callbacks.callbacks)
 
+
+from keras.utils import plot_model
+plot_model(keras_model, to_file='model.png')
+
 import h5py
 h5File = h5py.File('train_deep_simple_all//KERAS_check_model_last_weights.h5')
 biases = h5File['/dense_1/dense_1/bias:0'][()]
@@ -97,19 +104,45 @@ biases2 = h5File['/dense_2/dense_2/bias:0'][()]
 weights2 = h5File['/dense_2/dense_2/kernel:0'][()]
 
 print "biases", biases
-print "weights", weights
+#print "weights", weights
+#print weights for HLS
+print repr(weights)
+
 print "biases2", biases2
 print "weights2", weights2
-print "X_train_val[100:101]", X_train_val[100:101]
 
-layer1_out = np.dot(X_train_val[100:101],weights)+biases
-print "np.dot(X_train_val[100:101],weights)+biases", layer1_out
+#print "X_train_val[100:101]", X_train_val[100:101]
+
+#### CHECK MATH
+#############################
+## NEED TO ADD SIGMOID FIXME
+#layer1_out = np.dot(X_train_val[100:101],weights)+biases
+#print "np.dot(X_train_val[100:101],weights)+biases", layer1_out
 
 #relu
-for x in np.nditer(layer1_out, op_flags=['readwrite']):
-    if x<=0: 
-        x[...] = 0
+#for x in np.nditer(layer1_out, op_flags=['readwrite']):
+#    if x<=0: 
+#        x[...] = 0
 
-print "np.dot(layer1_out, weights2)+biases2", np.dot(layer1_out, weights2)+biases2
-print "prediction", keras_model.predict(X_train_val[100:101])
+#print "np.dot(layer1_out, weights2)+biases2", np.dot(layer1_out, weights2)+biases2
+
+
+#### KERAS PREDICT
+###########################
+#print "prediction", keras_model.predict(X_train_val[100:101])
+#t0 = clock()
+#my_prediction = keras_model.predict(X_train_val[100:101])
+#t1 = clock()
+#print("%.15f seconds" % (t1-t0))
+
+t0 = clock()
+my_prediction = keras_model.predict(X_train_val[0:10000])
+t1 = clock()
+print("%.15f seconds" % (t1-t0))
+print "prediction", my_prediction
+
+#print "X_train_val", X_train_val[0:1000]
+np.savetxt('in.dat',X_train_val[0:10000])
+np.savetxt('keras.dat',my_prediction)
+
 print "truth", y_train_val[100:101]

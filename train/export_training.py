@@ -2,7 +2,11 @@ import numpy as np
 import h5py
 import os
 import tarfile
+import json
 
+#######################################
+## Print a bias or weight array to C++
+#######################################
 def print_to_cpp(name, a):
     #put output in subdir for tarballing later
     if not os.path.isdir('keras_training'):
@@ -31,12 +35,42 @@ def print_to_cpp(name, a):
         else:
             f.write(", {}".format(x))
         i=i+1
-    f.write("}")
+    f.write("};")
     f.close()
 
 
 
+######################
+##  JSON
+######################
 
+#Extract model architecture from json
+with open('h3l.json') as json_file:
+    model_arch = json.load(json_file)
+#print(model_arch)
+
+#Define layers to skip for conversion to HLS
+skip_layers = ['InputLayer', 'Dropout', 'Flatten'] 
+
+#Loop through layers
+for layer in model_arch["config"]["layers"]:
+    if layer["class_name"] in skip_layers:
+        continue 
+    
+    print("PARSED LAYER NAME",layer["name"])
+
+
+    for config,config_value in layer["config"].items():
+        if(config=="activation"):
+            print("PARSED ACTIVATION",config_value)
+        if(config=="units"):
+            print("PARSED NUM OF NODES",config_value)
+
+
+
+######################
+##  H5
+######################
 h5File = h5py.File('KERAS_check_best_model_weights.h5')
 
 #print h5 contents
